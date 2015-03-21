@@ -1,8 +1,8 @@
 ﻿using System;
 
-namespace SEab
+namespace Core
 {
-    struct Contact
+    public class Contact
     {
         public String name;
         public String surname;

@@ -1,11 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
+using Core;
+using System.Net;
 
-namespace SEab
+namespace Client
 {
     class CLI
     {
-        AdressBook ab = new AdressBook();
+        NetworkClient client = new NetworkClient("http://localhost:8080/");
         Int32 getValidatedInt(List<Int32> options)
         {
             Int32 res = 0;
@@ -27,22 +29,29 @@ namespace SEab
             bool exit = false;
             while (!exit)
             {
-                Console.WriteLine("Menu:\n1. View all contacts\n2. Search\n3. New contact\n4. Exit");
-                int choice = getValidatedInt(new List<Int32> { 1, 2, 3, 4 });
-                switch (choice)
+                try
                 {
-                    case 1:
-                        displayAllContacts(ab.MasterList);
-                        break;
-                    case 2:
-                        search();
-                        break;
-                    case 3:
-                        AddContact();
-                        break;
-                    case 4:
-                        exit = true;
-                        break;
+                    Console.WriteLine("Menu:\n1. View all contacts\n2. Search\n3. New contact\n4. Exit");
+                    int choice = getValidatedInt(new List<Int32> { 1, 2, 3, 4 });
+                    switch (choice)
+                    {
+                        case 1:
+                            displayAllContacts();
+                            break;
+                        case 2:
+                            search();
+                            break;
+                        case 3:
+                            AddContact();
+                            break;
+                        case 4:
+                            exit = true;
+                            break;
+                    }
+                }
+                catch(AggregateException ex)
+                {
+                      Console.WriteLine("Error connecting to the server");
                 }
             }
         }
@@ -66,16 +75,16 @@ namespace SEab
             switch (choice)
             {
                 case 1:
-                    searchResults = ab.Search(str, AdressBook.SearchType.Name);
+                    searchResults = client.searchContacts(str, Strings.SearchTypeName);
                     break;
                 case 2:
-                    searchResults = ab.Search(str, AdressBook.SearchType.NameAndSurname);
+                    searchResults = client.searchContacts(str, Strings.SearchTypeNplS);
                     break;
                 case 3:
-                    searchResults = ab.Search(str, AdressBook.SearchType.Phone);
+                    searchResults = client.searchContacts(str, Strings.SearchTypeNumb);
                     break;
                 case 4:
-                    searchResults = ab.Search(str, AdressBook.SearchType.All);
+                    searchResults = client.searchContacts(str, Strings.SearchTypeAll);
                     break;
             }
             if (searchResults.Count == 0)
@@ -85,10 +94,10 @@ namespace SEab
             else
             {
                 Console.WriteLine("Found {0} matches", searchResults.Count);
-                displayAllContacts(searchResults);
+                displayContacts(searchResults);
             }
         }
-        void displayAllContacts(List<Contact> list)
+        void displayContacts(List<Contact> list)
         {
             if (list.Count == 0)
                 Console.WriteLine("Nothing to display.");
@@ -99,18 +108,25 @@ namespace SEab
                 displayContact(contact);
             }
         }
+        void displayAllContacts()
+        {
+            List<Contact> list = client.getAllContacts();
+            displayContacts(list);
+        }
         void AddContact()
         {
+            Contact contact = new Contact();
             Console.Write("Name: ");
-            string name = Console.ReadLine();
+            contact.name = Console.ReadLine();
             Console.Write("Surname: ");
-            string surname = Console.ReadLine();
+            contact.surname = Console.ReadLine();
             Console.Write("Phone number: ");
-            string phone = Console.ReadLine();
+            contact.number = Console.ReadLine();
             Console.Write("Mail: ");
-            string mail = Console.ReadLine();
+            contact.mail = Console.ReadLine();
             Console.WriteLine("Contact created");
-            ab.Add(name, surname, phone, mail);
+
+            client.postContact(contact);
         }
     }
 }

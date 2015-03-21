@@ -1,0 +1,15 @@
+﻿using System;
+using System.Collections.Generic;
+
+namespace Client
+{
+    class EntryPoint
+    {
+        public static void Main(string[] args)
+        {
+            CLI cli = new CLI();
+            cli.startActionLoop();
+        }
+    }
+}
+

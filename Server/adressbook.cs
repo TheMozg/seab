@@ -1,17 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
+using Core;
 
-namespace SEab
+namespace Server
 {
     class AdressBook
     {
-        public enum SearchType
-        {
-            Name,
-            NameAndSurname,
-            Phone,
-            All
-        }
         List<Contact> masterList = new List<Contact>();
         public List<Contact> MasterList
         {
@@ -23,6 +17,10 @@ namespace SEab
         public void Add(String name, String surname, String number, String mail)
         {
             masterList.Add(new Contact { name = name, surname = surname, number = number, mail = mail });
+        }
+        public void Add(Contact contact)
+        {
+            masterList.Add(contact);
         }
 
         public List<Contact> Search(String query, SearchType st)
