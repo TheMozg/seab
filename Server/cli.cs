@@ -15,9 +15,7 @@ namespace Server
         {
             Console.WriteLine("App started");
             var listener = new HttpListener();
-            listener.Prefixes.Add("http://localhost:8080/" + Strings.UriGetAll + "/");
-            listener.Prefixes.Add("http://localhost:8080/" + Strings.UriPostOne + "/");
-            listener.Prefixes.Add("http://localhost:8080/" + Strings.UriSearch + "/");
+            listener.Prefixes.Add("http://+:8080/");
             listener.Start();
             Console.WriteLine("Service started");
             Console.WriteLine();

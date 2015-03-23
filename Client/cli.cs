@@ -7,7 +7,14 @@ namespace Client
 {
     class CLI
     {
-        NetworkClient client = new NetworkClient("http://localhost:8080/");
+        public string BaseAdress
+        {
+            set
+            {
+                client.BaseAdress = value;
+            }
+        }
+        NetworkClient client = new NetworkClient();
         Int32 getValidatedInt(List<Int32> options)
         {
             Int32 res = 0;
@@ -25,6 +32,11 @@ namespace Client
         }
         public void startActionLoop()
         {
+            if(!client.ValidServerUri)
+            {
+                Console.WriteLine("Server uri is not valid");
+                return;
+            }
             Console.WriteLine("Enter the number of action and press [Enter]. Then follow instructions.");
             bool exit = false;
             while (!exit)
@@ -51,7 +63,11 @@ namespace Client
                 }
                 catch(AggregateException ex)
                 {
-                      Console.WriteLine("Error connecting to the server");
+                    Console.WriteLine(ex.Message);
+                }
+                catch (InvalidOperationException ex)
+                {
+                    Console.WriteLine(ex.Message);
                 }
             }
         }

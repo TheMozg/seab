@@ -11,9 +11,31 @@ namespace Client
     class NetworkClient
     {
         HttpClient Client = new HttpClient();
+        public bool ValidServerUri = true;
+        public string BaseAdress
+        {
+            get
+            {
+                return Client.BaseAddress.OriginalString;
+            }
+            set
+            {
+                try 
+                { 
+                    Client.BaseAddress = new Uri(value);
+                }
+                catch
+                {
+                    ValidServerUri = false;
+                }
+            }
+        }
         public NetworkClient(String baseAdress)
         {
-            Client.BaseAddress = new Uri(baseAdress);
+            BaseAdress = baseAdress;
+        }
+        public NetworkClient()
+        {
         }
         public List<Contact> getAllContacts()
         {
