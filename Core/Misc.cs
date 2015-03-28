@@ -1,5 +1,7 @@
 ﻿using System;
 using System.IO;
+using System.Xml.Serialization;
+using System.Collections.Generic;
 
 namespace Core
 {
@@ -50,6 +52,18 @@ namespace Core
                     ms.Write(buffer, 0, read);
                 }
             }
+        }
+
+        public static void Serialize(Stream outputStream, List<Contact> list)
+        {
+            XmlSerializer xmls = new XmlSerializer(list.GetType());
+            xmls.Serialize(outputStream, list);
+        }
+
+        public static List<Contact> Deserialize(Stream inputStream)
+        {
+            XmlSerializer xmls = new XmlSerializer(typeof(List<Contact>));
+            return (List<Contact>)xmls.Deserialize(inputStream);
         }
     }
 }

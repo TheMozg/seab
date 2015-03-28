@@ -44,9 +44,7 @@ namespace Client
             HttpResponseMessage msg = getTask.Result;
             var parseTask = msg.Content.ReadAsStreamAsync();
             parseTask.Wait();
-            Stream stream = parseTask.Result;
-            XmlSerializer xmls = new XmlSerializer(typeof(List<Contact>));
-            List<Contact> list = (List<Contact>)xmls.Deserialize(stream);
+            List<Contact> list = Misc.Deserialize(parseTask.Result);
             return list;
         }
         public List<Contact> searchContacts(String searchString, String searchBy)
@@ -59,9 +57,7 @@ namespace Client
             HttpResponseMessage msg = searchTask.Result;
             var parseTask = msg.Content.ReadAsStreamAsync();
             parseTask.Wait();
-            Stream stream = parseTask.Result;
-            XmlSerializer xmls = new XmlSerializer(typeof(List<Contact>));
-            List<Contact> list = (List<Contact>)xmls.Deserialize(stream);
+            List<Contact> list = Misc.Deserialize(parseTask.Result);
             return list;
         }
         public void postContact(Contact contact)

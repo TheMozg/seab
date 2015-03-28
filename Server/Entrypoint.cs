@@ -8,7 +8,7 @@ namespace Server
         public static void Main(string[] args)
         {
             CLI cli = new CLI();
-            cli.startActionLoop();
+            cli.Start();
         }
     }
 }
