@@ -23,15 +23,21 @@ namespace Server
             listener.Start();
             while (true)
             {
-                Console.WriteLine("Waiting for request");
-                var context = listener.GetContext();
-                new Thread(() => processRequest(context)).Start();
-                Console.WriteLine("New thread despatched");
+                var res = listener.BeginGetContext(new AsyncCallback(ListenerCallback), listener);
+                res.AsyncWaitHandle.WaitOne();
             }
+        }
+        void ListenerCallback(IAsyncResult result)
+        {
+            Console.WriteLine("Callback method was called");
+
+            HttpListenerContext context = listener.EndGetContext(result);
+            processRequest(context);
         }
         void processPostOneRequest(HttpListenerContext context)
         {
-            Console.WriteLine("Processing POST request (create contact)");
+            Console.WriteLine("Processing POST request (create)");
+            Thread.Sleep(5000);
 
             var parser = new HttpMultipartParser(context.Request.InputStream);
             if (parser.Success)
@@ -41,12 +47,10 @@ namespace Server
                 contact.surname = parser.Parameters[Strings.KeyContactSnam];
                 contact.number = parser.Parameters[Strings.KeyContactNumb];
                 contact.mail = parser.Parameters[Strings.KeyContactMail];
-                lock (ab)
-                    ab.Add(contact);
+                ab.Add(contact);
             }
             context.Response.Close();
-
-            Console.WriteLine("Processed request");
+            Console.WriteLine("Processed request (create)");
         }
         void processRequest(HttpListenerContext context)
         {
@@ -80,40 +84,36 @@ namespace Server
                 searchBy = parser.Parameters[Strings.KeySearchType];
             }
             List<Contact> searchResults = new List<Contact>();
-            lock (ab)
+            switch (searchBy)
             {
-                switch (searchBy)
-                {
-                    case Strings.SearchTypeName:
-                        searchResults = ab.Search(searchString, SearchType.Name);
-                        break;
-                    case Strings.SearchTypeNplS:
-                        searchResults = ab.Search(searchString, SearchType.NameAndSurname);
-                        break;
-                    case Strings.SearchTypeNumb:
-                        searchResults = ab.Search(searchString, SearchType.Phone);
-                        break;
-                    case Strings.SearchTypeAll:
-                        searchResults = ab.Search(searchString, SearchType.All);
-                        break;
-                }
+                case Strings.SearchTypeName:
+                    searchResults = ab.Search(searchString, SearchType.Name);
+                    break;
+                case Strings.SearchTypeNplS:
+                    searchResults = ab.Search(searchString, SearchType.NameAndSurname);
+                    break;
+                case Strings.SearchTypeNumb:
+                    searchResults = ab.Search(searchString, SearchType.Phone);
+                    break;
+                case Strings.SearchTypeAll:
+                    searchResults = ab.Search(searchString, SearchType.All);
+                    break;
             }
 
             Misc.Serialize(context.Response.OutputStream, searchResults);
             context.Response.Close();
 
-            Console.WriteLine("Processed request");
+            Console.WriteLine("Processed request (search)");
         }
 
         private void processGetAllRequest(HttpListenerContext context)
         {
             Console.WriteLine("Processing GET request (getall)");
 
-            lock (ab)
-                Misc.Serialize(context.Response.OutputStream, ab.MasterList);
+            Misc.Serialize(context.Response.OutputStream, ab.MasterList);
             context.Response.Close();
 
-            Console.WriteLine("Processed request");
+            Console.WriteLine("Processed request (getall)");
         }
     }
 }
