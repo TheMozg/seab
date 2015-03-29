@@ -47,7 +47,8 @@ namespace Server
                 contact.surname = parser.Parameters[Strings.KeyContactSnam];
                 contact.number = parser.Parameters[Strings.KeyContactNumb];
                 contact.mail = parser.Parameters[Strings.KeyContactMail];
-                ab.Add(contact);
+                lock(ab)
+                    ab.Add(contact);
             }
             context.Response.Close();
             Console.WriteLine("Processed request (create)");
@@ -84,20 +85,23 @@ namespace Server
                 searchBy = parser.Parameters[Strings.KeySearchType];
             }
             List<Contact> searchResults = new List<Contact>();
-            switch (searchBy)
+            lock (ab)
             {
-                case Strings.SearchTypeName:
-                    searchResults = ab.Search(searchString, SearchType.Name);
-                    break;
-                case Strings.SearchTypeNplS:
-                    searchResults = ab.Search(searchString, SearchType.NameAndSurname);
-                    break;
-                case Strings.SearchTypeNumb:
-                    searchResults = ab.Search(searchString, SearchType.Phone);
-                    break;
-                case Strings.SearchTypeAll:
-                    searchResults = ab.Search(searchString, SearchType.All);
-                    break;
+                switch (searchBy)
+                {
+                    case Strings.SearchTypeName:
+                        searchResults = ab.Search(searchString, SearchType.Name);
+                        break;
+                    case Strings.SearchTypeNplS:
+                        searchResults = ab.Search(searchString, SearchType.NameAndSurname);
+                        break;
+                    case Strings.SearchTypeNumb:
+                        searchResults = ab.Search(searchString, SearchType.Phone);
+                        break;
+                    case Strings.SearchTypeAll:
+                        searchResults = ab.Search(searchString, SearchType.All);
+                        break;
+                }
             }
 
             Misc.Serialize(context.Response.OutputStream, searchResults);
@@ -110,7 +114,8 @@ namespace Server
         {
             Console.WriteLine("Processing GET request (getall)");
 
-            Misc.Serialize(context.Response.OutputStream, ab.MasterList);
+            lock (ab)
+                Misc.Serialize(context.Response.OutputStream, ab.MasterList);
             context.Response.Close();
 
             Console.WriteLine("Processed request (getall)");
