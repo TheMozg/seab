@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using Core;
 using System.Net.Http;
+using System.Net;
 using System.Threading.Tasks;
 using System.IO;
 using System.Xml.Serialization;
@@ -10,7 +11,8 @@ namespace Client
 {
     class NetworkClient
     {
-        HttpClient Client = new HttpClient();
+        HttpClientHandler clientHandler;
+        HttpClient Client;
         public bool ValidServerUri = true;
         public string BaseAdress
         {
@@ -20,8 +22,8 @@ namespace Client
             }
             set
             {
-                try 
-                { 
+                try
+                {
                     Client.BaseAddress = new Uri(value);
                 }
                 catch
@@ -30,12 +32,10 @@ namespace Client
                 }
             }
         }
-        public NetworkClient(String baseAdress)
-        {
-            BaseAdress = baseAdress;
-        }
         public NetworkClient()
         {
+            clientHandler = new HttpClientHandler();
+            Client = new HttpClient(clientHandler);
         }
         public List<Contact> getAllContacts()
         {
@@ -45,6 +45,7 @@ namespace Client
             var parseTask = msg.Content.ReadAsStreamAsync();
             parseTask.Wait();
             List<Contact> list = Misc.Deserialize(parseTask.Result);
+
             return list;
         }
         public List<Contact> searchContacts(String searchString, String searchBy)
@@ -58,17 +59,18 @@ namespace Client
             var parseTask = msg.Content.ReadAsStreamAsync();
             parseTask.Wait();
             List<Contact> list = Misc.Deserialize(parseTask.Result);
+
             return list;
         }
         public void postContact(Contact contact)
         {
-                MultipartFormDataContent content = new MultipartFormDataContent();
-                content.Add(new StringContent(contact.name), Strings.KeyContactName);
-                content.Add(new StringContent(contact.surname), Strings.KeyContactSnam);
-                content.Add(new StringContent(contact.mail), Strings.KeyContactMail);
-                content.Add(new StringContent(contact.number), Strings.KeyContactNumb);
-                var postTask = Client.PostAsync(Strings.UriPostOne, content);
-                postTask.Wait();
+            MultipartFormDataContent content = new MultipartFormDataContent();
+            content.Add(new StringContent(contact.name), Strings.KeyContactName);
+            content.Add(new StringContent(contact.surname), Strings.KeyContactSnam);
+            content.Add(new StringContent(contact.mail), Strings.KeyContactMail);
+            content.Add(new StringContent(contact.number), Strings.KeyContactNumb);
+            var postTask = Client.PostAsync(Strings.UriPostOne, content);
+            postTask.Wait();
         }
     }
 }

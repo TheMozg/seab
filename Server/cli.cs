@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.Concurrent;
 using System.Net;
 using Core;
 using System.IO;
@@ -11,7 +12,7 @@ namespace Server
 {
     class CLI
     {
-        AdressBook ab = new AdressBook();
+        ConcurrentDictionary<String, AdressBook> abs = new ConcurrentDictionary<string, AdressBook>();
         HttpListener listener = new HttpListener();
         public CLI()
         {
@@ -26,7 +27,7 @@ namespace Server
                 var res = listener.BeginGetContext(new AsyncCallback(ListenerCallback), listener);
                 res.AsyncWaitHandle.WaitOne();
             }
-        }
+            }
         void ListenerCallback(IAsyncResult result)
         {
             Console.WriteLine("Callback method was called");
@@ -34,7 +35,7 @@ namespace Server
             HttpListenerContext context = listener.EndGetContext(result);
             processRequest(context);
         }
-        void processPostOneRequest(HttpListenerContext context)
+        void processPostOneRequest(HttpListenerContext context, AdressBook ab)
         {
             Console.WriteLine("Processing POST request (create)");
             Thread.Sleep(5000);
@@ -47,7 +48,6 @@ namespace Server
                 contact.surname = parser.Parameters[Strings.KeyContactSnam];
                 contact.number = parser.Parameters[Strings.KeyContactNumb];
                 contact.mail = parser.Parameters[Strings.KeyContactMail];
-                lock(ab)
                     ab.Add(contact);
             }
             context.Response.Close();
@@ -55,24 +55,39 @@ namespace Server
         }
         void processRequest(HttpListenerContext context)
         {
+            Cookie cookie = context.Request.Cookies["id"];
+            String id = "";
+            if(cookie != null)
+                id = cookie.Value;
+            Console.WriteLine("id is {0}", id);
+            if (String.IsNullOrEmpty(id))
+            {
+                Guid guid = Guid.NewGuid();
+                id = guid.ToString();
+                cookie = new Cookie("id", id);
+                cookie.Path = "/";
+            }
+            context.Response.SetCookie(cookie);
+            AdressBook ab = abs.GetOrAdd(id, new AdressBook());
+
             String rawUrl = context.Request.RawUrl;
             Console.WriteLine("Requested uri: {0}", rawUrl);
             if (rawUrl.StartsWith("/"))
                 rawUrl = rawUrl.Remove(0, 1);
             if (rawUrl == Strings.UriPostOne)
             {
-                processPostOneRequest(context);
+                processPostOneRequest(context, ab);
             }
             if (rawUrl == Strings.UriGetAll)
             {
-                processGetAllRequest(context);
+                processGetAllRequest(context, ab);
             }
             if (rawUrl == Strings.UriSearch)
             {
-                processSearchRequest(context);
+                processSearchRequest(context, ab);
             }
         }
-        private void processSearchRequest(HttpListenerContext context)
+        private void processSearchRequest(HttpListenerContext context, AdressBook ab)
         {
             Console.WriteLine("Processing POST request (search)");
 
@@ -85,8 +100,6 @@ namespace Server
                 searchBy = parser.Parameters[Strings.KeySearchType];
             }
             List<Contact> searchResults = new List<Contact>();
-            lock (ab)
-            {
                 switch (searchBy)
                 {
                     case Strings.SearchTypeName:
@@ -102,7 +115,6 @@ namespace Server
                         searchResults = ab.Search(searchString, SearchType.All);
                         break;
                 }
-            }
 
             Misc.Serialize(context.Response.OutputStream, searchResults);
             context.Response.Close();
@@ -110,11 +122,10 @@ namespace Server
             Console.WriteLine("Processed request (search)");
         }
 
-        private void processGetAllRequest(HttpListenerContext context)
+        private void processGetAllRequest(HttpListenerContext context, AdressBook ab)
         {
             Console.WriteLine("Processing GET request (getall)");
 
-            lock (ab)
                 Misc.Serialize(context.Response.OutputStream, ab.MasterList);
             context.Response.Close();
 
