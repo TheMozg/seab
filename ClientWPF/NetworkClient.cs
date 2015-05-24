@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 using System.IO;
 using System.Xml.Serialization;
 
-namespace Client
+namespace ClientWPF
 {
     class NetworkClient
     {

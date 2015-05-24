@@ -38,7 +38,6 @@ namespace Server
         void processPostOneRequest(HttpListenerContext context, AdressBook ab)
         {
             Console.WriteLine("Processing POST request (create)");
-            Thread.Sleep(5000);
 
             var parser = new HttpMultipartParser(context.Request.InputStream);
             if (parser.Success)
