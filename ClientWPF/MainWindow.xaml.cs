@@ -29,11 +29,6 @@ namespace ClientWPF
             DataContext = this;
             currentDataList = new ObservableCollection<Contact>();
             //client.BaseAdress = "http://localhost:8080/";
-            var b = new LangSel();
-            b.ShowDialog();
-
-            if(b.cb.Text == "Русский")
-                System.Threading.Thread.CurrentThread.CurrentUICulture = new System.Globalization.CultureInfo("ru-RU");
 
             var a = new ServerSel();
             a.ShowDialog();
